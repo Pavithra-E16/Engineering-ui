@@ -1,0 +1,13 @@
+{
+  "name": "erp-functions",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "engines": { "node": "20" },
+  "scripts": { "deploy": "firebase deploy --only functions" },
+  "dependencies": {
+    "@google/generative-ai": "0.21.0",
+    "firebase-admin": "12.5.0",
+    "firebase-functions": "6.0.1"
+  }
+}

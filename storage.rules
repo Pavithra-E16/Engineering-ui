@@ -1,0 +1,14 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function profile() { return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data; }
+    function staff() { return request.auth != null && profile().active != false && !(profile().role in ['student', 'parent']); }
+    // Course files: readable by any signed-in active user; uploads by staff, max 15 MB, document/image types only.
+    match /course-files/{rest=**} {
+      allow read: if request.auth != null && profile().active != false;
+      allow write: if staff() && request.resource.size < 15 * 1024 * 1024
+        && request.resource.contentType.matches('application/.*|image/(png|jpeg)|text/plain');
+    }
+    match /{all=**} { allow read, write: if false; }
+  }
+}
