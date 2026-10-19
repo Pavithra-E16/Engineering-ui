@@ -14,7 +14,7 @@ function UserForm({ u, onClose, onSaved }) {
   const { db, create, update, mode } = useData();
   const toast = useToast();
   const isNew = !u?.id;
-  const [f, setF] = useState({ role: 'faculty', linkedStudentIds: [], ...u, uidInput: '', password: '' });
+  const [f, setF] = useState({ role: 'staff', ...u, uidInput: '', password: '' });
   const [err, setErr] = useState('');
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
   const save = async () => {
@@ -24,7 +24,6 @@ function UserForm({ u, onClose, onSaved }) {
       return setErr('A user with this email already exists.');
     if (u?.id === me.id && f.role !== me.role) return setErr('You cannot change your own role.');
     if (f.role === 'student' && !f.studentId) return setErr('Link the student record.');
-    if (f.role === 'parent' && !f.linkedStudentIds?.length) return setErr('Link at least one student to the parent account.');
     if (isNew && mode === 'demo' && !strong(f.password))
       return setErr('Initial password must be 8+ characters with upper, lower case and a digit.');
     if (isNew && mode === 'firebase' && !f.uidInput.trim()) return setErr('Enter the Firebase Authentication UID for this user.');
@@ -35,7 +34,9 @@ function UserForm({ u, onClose, onSaved }) {
       departmentId: f.departmentId || undefined,
       employeeId: f.employeeId || undefined,
       studentId: f.role === 'student' ? f.studentId : undefined,
-      linkedStudentIds: f.role === 'student' ? [f.studentId] : f.role === 'parent' ? f.linkedStudentIds : undefined,
+      linkedStudentIds: f.role === 'student' ? [f.studentId] : undefined,
+      hostelId: f.role === 'warden' ? f.hostelId || undefined : undefined,
+      designation: f.role === 'student' ? undefined : f.designation || db.employees.find((e) => e.id === f.employeeId)?.designation,
       phone: f.phone || undefined,
     };
     try {
@@ -57,7 +58,7 @@ function UserForm({ u, onClose, onSaved }) {
       setErr(e.message);
     }
   };
-  const staffRole = !['student', 'parent'].includes(f.role);
+  const staffRole = f.role !== 'student';
   return (
     <Modal
       open
@@ -87,7 +88,7 @@ function UserForm({ u, onClose, onSaved }) {
               disabled={!isNew && mode === 'firebase'}
             />
           </Field>
-          <Field label="Role" required hint="Roles are assigned only by IT Administrators">
+          <Field label="Role" required hint="Roles are assigned only by Administrators">
             <Select value={f.role} onChange={(e) => set('role', e.target.value)}>
               {ROLES.map((r) => (
                 <option key={r.id} value={r.id}>
@@ -118,10 +119,15 @@ function UserForm({ u, onClose, onSaved }) {
             </Field>
           )}
           {staffRole && (
-            <Field label="Department scope" hint="Required for HOD / Program Coordinator">
-              <Select value={f.departmentId ?? ''} onChange={(e) => set('departmentId', e.target.value)}>
-                <option value="">Institution-wide</option>
-                {options(db, 'departments').map((o) => (
+            <Field label="Designation" hint="Shown on approvals (e.g. Hostel Warden)">
+              <Input value={f.designation ?? ''} onChange={(e) => set('designation', e.target.value)} />
+            </Field>
+          )}
+          {f.role === 'warden' && (
+            <Field label="Hostel" hint="The warden sees and approves only this hostel">
+              <Select value={f.hostelId ?? ''} onChange={(e) => set('hostelId', e.target.value)}>
+                <option value="">All hostels</option>
+                {options(db, 'hostels').map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.label}
                   </option>
@@ -133,26 +139,6 @@ function UserForm({ u, onClose, onSaved }) {
             <Field label="Student record" required className="full">
               <Select value={f.studentId ?? ''} onChange={(e) => set('studentId', e.target.value)}>
                 <option value="">Select…</option>
-                {options(db, 'students').map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-          )}
-          {f.role === 'parent' && (
-            <Field label="Linked students (authorised)" required className="full">
-              <Select
-                multiple
-                value={f.linkedStudentIds ?? []}
-                onChange={(e) =>
-                  set(
-                    'linkedStudentIds',
-                    Array.from(e.target.selectedOptions).map((o) => o.value),
-                  )
-                }
-              >
                 {options(db, 'students').map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.label}
@@ -307,7 +293,7 @@ export default function Users() {
   };
   return (
     <>
-      <PageHeader title="User Management" subtitle="Accounts, roles and authorised student–parent links" />
+      <PageHeader title="Users & Access" subtitle="Individual logins and role-based access for the Principal, Accounts, Admin, Staff, Wardens and Students" />
       {mode === 'firebase' && (
         <div className="mb-12">
           <Alert tone="info">
@@ -393,9 +379,11 @@ export default function Users() {
                   key: 'scope',
                   header: 'Scope / links',
                   value: (r) =>
-                    r.role === 'parent' || r.role === 'student'
+                    r.role === 'student'
                       ? (r.linkedStudentIds ?? []).map((s) => labelOf(db, 'students', s)).join(', ')
-                      : r.departmentId
+                      : r.hostelId
+                        ? labelOf(db, 'hostels', r.hostelId)
+                        : r.departmentId
                         ? labelOf(db, 'departments', r.departmentId)
                         : 'Institution',
                 },

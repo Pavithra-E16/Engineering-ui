@@ -9,7 +9,7 @@ export function ForbiddenPage() {
         <ShieldAlert />
       </span>
       <h1>Access denied</h1>
-      <p>Your role does not have permission to view this page. If you believe this is a mistake, contact the IT Administrator.</p>
+      <p>Your role does not have permission to view this page. If you believe this is a mistake, contact the Administrator.</p>
       <Link to="/dashboard">
         <Button>Go to Dashboard</Button>
       </Link>

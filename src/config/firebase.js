@@ -15,7 +15,10 @@ const config = {
 export const FIREBASE_ENABLED = Boolean(config.apiKey && config.authDomain && config.projectId && config.appId);
 export const STORAGE_ENABLED = FIREBASE_ENABLED && Boolean(config.storageBucket);
 export const APP_MODE = FIREBASE_ENABLED ? 'firebase' : 'demo';
-export const AI_ENDPOINT = env.VITE_AI_ENDPOINT || '';
+/** Cloud Functions base URL for payment orders (createPaymentOrder) — see functions/index.js. */
+export const PAYMENTS_ENDPOINT = env.VITE_PAYMENTS_ENDPOINT || '';
+/** Razorpay key id (public). The key secret stays in Cloud Functions secrets. */
+export const RAZORPAY_KEY_ID = env.VITE_RAZORPAY_KEY_ID || '';
 export const SESSION_TIMEOUT_MIN = Number(env.VITE_SESSION_TIMEOUT_MINUTES) || 60;
 let app;
 let auth;

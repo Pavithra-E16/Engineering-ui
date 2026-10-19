@@ -1,16 +1,15 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
+  Award,
+  BedDouble,
   Bell,
-  Building2,
-  FileBarChart,
-  GraduationCap,
+  MessageSquareText,
+  Wallet,
   Settings as SettingsIcon,
-  Sparkles,
   Users,
   CheckCheck,
   ChevronDown,
-  ChevronRight,
   ChevronsLeft,
   ChevronsRight,
   LogOut,
@@ -26,14 +25,16 @@ import { useData } from '../data/store';
 import { MODULES, canAccess, roleLabel } from '../lib/roles';
 import { cn, fmtDateTime, initials } from '../lib/utils';
 import { Alert, ICONS, Spinner, useConfirm } from '../components/ui';
+import { CollegeLogo } from '../components/CollegeLogo';
 
-const GROUPS = ['Main', 'Academic Management', 'Administration', 'Student Services', 'AI Features', 'Reports', 'Settings'];
+const GROUPS = ['Main', 'Accounts & Finance', 'Admissions & Students', 'Certificates', 'Hostel', 'Communication', 'Settings'];
+const GROUP_SHORT = { 'Accounts & Finance': 'Finance', 'Admissions & Students': 'Admissions' };
 const GROUP_ICONS = {
-  'Academic Management': GraduationCap,
-  Administration: Building2,
-  'Student Services': Users,
-  'AI Features': Sparkles,
-  Reports: FileBarChart,
+  'Accounts & Finance': Wallet,
+  'Admissions & Students': Users,
+  Certificates: Award,
+  Hostel: BedDouble,
+  Communication: MessageSquareText,
   Settings: SettingsIcon,
 };
 
@@ -96,7 +97,7 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) {
       <NavLink
         key={m.id}
         to={m.path}
-        end={m.path === '/settings'}
+        end={m.path === '/settings' || m.path === '/hostel'}
         title={collapsed ? m.label : undefined}
         className={({ isActive }) => cn(sub ? 'nav-sub' : 'nav-link', isActive && 'active')}
       >
@@ -111,9 +112,7 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) {
       {mobileOpen && <div className="backdrop" onClick={() => setMobileOpen(false)} />}
       <aside className={cn('sidebar', collapsed && 'collapsed', mobileOpen && 'open')}>
         <div className="sidebar-brand">
-          <span className="brand-icon">
-            <GraduationCap />
-          </span>
+          <CollegeLogo />
           <div className="text" style={{ minWidth: 0 }}>
             <p className="name truncate">EduERP</p>
             <p className="sub truncate" title={settings.institutionName}>
@@ -142,7 +141,7 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) {
                   aria-expanded={open}
                 >
                   <GroupIcon />
-                  <span className="label">{g.replace(' Management', '')}</span>
+                  <span className="label">{GROUP_SHORT[g] ?? g}</span>
                   <ChevronDown className="chev" />
                 </button>
                 {open && <div className="nav-subs">{items.map((m) => link(m, true))}</div>}
@@ -324,7 +323,7 @@ export function AppLayout() {
   const pageTitle = location.pathname.startsWith('/profile')
     ? 'My Profile'
     : location.pathname.startsWith('/students/')
-      ? 'Student 360° Profile'
+      ? 'Student Profile'
       : (mod?.label ?? 'Page');
   useEffect(() => {
     document.title = `${pageTitle} · EduERP`;
@@ -344,7 +343,7 @@ export function AppLayout() {
               {mod && mod.group !== 'Main' && (
                 <>
                   <span className="sep">/</span>
-                  <span>{mod.group.replace(' Management', '')}</span>
+                  <span>{GROUP_SHORT[mod.group] ?? mod.group}</span>
                 </>
               )}
               {pageTitle !== 'Dashboard' && (

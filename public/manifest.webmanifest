@@ -1,0 +1,13 @@
+{
+  "name": "College ERP",
+  "short_name": "College ERP",
+  "description": "Fees, admissions, certificates and hostel for staff and students.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f3f6fa",
+  "theme_color": "#1a8fe0",
+  "icons": [
+    { "src": "/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

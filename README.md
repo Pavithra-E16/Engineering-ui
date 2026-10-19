@@ -1,8 +1,14 @@
-# Engineering College ERP
+# College ERP — Accounts, Admissions, Certificates & Hostel
 
-A role-based ERP web application for engineering colleges. It covers academics, administration, student services, five AI-assisted features, and reporting, for 18 stakeholder roles.
+A role-based web application for an engineering college covering five areas:
 
-**Stack:** React 18 (JavaScript / JSX), Vite, plain CSS (`src/styles/app.css`), React Router, Lucide icons, Recharts, Firebase Auth, Cloud Firestore and Firebase Storage. No TypeScript and no CSS framework.
+1. **Accounts & Finance** — student fee records (total, paid, outstanding, discounts, scholarships), internal vs external fee heads, counter and online (payment gateway) collection with status tracking, fee-due SMS alerts with the payment cut-off date, cash book, expenditure (vendor invoices, hostel expenses, salaries, university remittances), and daily/auditor reports you can view, download (CSV) and print (PDF).
+2. **Admissions & Students** — enquiry → follow-up → registration → admission → relieving, admission sources (reference, social media, walk-in, …) for the publicity team, complete student records with scholarships, discounts, fees, receipts and activities, and SMS updates.
+3. **Certificates** — students request certificates from their own login; requests are validated by roll number and authorised by the Principal/Administrator; approved certificates carry a digital signature and a QR code; every download is logged (date, time, count); anyone can verify authenticity at `/verify/<id>`.
+4. **Hostel** — resident records and provisions issued, leave/out-pass with the approving warden's details and who picked the student up (parent, sibling or other authorised person), check-out/return with parent SMS.
+5. **Users, access & security** — separate logins for Principal, Accounts & Finance, Admissions, Staff, Hostel Warden, Administrator and Students; role-based menus, data-layer checks and generated Firestore rules; installable on phones (PWA) for staff.
+
+**Stack:** React 18 (JSX), Vite, plain CSS, React Router, Lucide icons, Recharts, `qrcode`, Firebase Auth / Firestore / Cloud Functions.
 
 ## Quick start (demo mode)
 
@@ -11,71 +17,78 @@ npm install
 npm run dev          # http://localhost:5173
 ```
 
-With no Firebase credentials in `.env`, the app runs in **demo mode**:
+With no Firebase credentials in `.env`, the app runs in **demo mode** with a synthetic dataset stored in the browser (IndexedDB): 252 students, fee demands and ~1,000 receipts, expenditure and salaries, enquiries, certificates and hostel leave records.
 
-- A deterministic synthetic dataset is generated and stored in the browser (IndexedDB). It includes 6 departments, 8 programs, 288 students, 62 staff, 162 courses, about 1,300 attendance sessions, assessments, results, finance, library, hostel, transport, placements and more.
-- Demo accounts exist for every role, `<role>@kvce.demo`, all with the password `Demo@123`. Examples: `principal@kvce.demo`, `hod@kvce.demo`, `faculty@kvce.demo`, `student@kvce.demo`, `parent@kvce.demo`, `it-admin@kvce.demo`.
-- Passwords are stored only as PBKDF2-SHA256 hashes. Demo auth is a separate code path from Firebase Auth.
-- The Sign In page has a **development-only** account picker. It only fills in the credentials; a user's role always comes from their account record.
-- **Settings → Reset demo data** regenerates the dataset.
+Demo accounts (password `Demo@123`):
 
-A banner on every page marks demo mode.
+| Role | Email |
+| --- | --- |
+| Principal | `principal@kvce.demo` |
+| Administrator | `admin@kvce.demo` |
+| Accounts & Finance | `finance@kvce.demo` |
+| Admissions & Publicity | `admission@kvce.demo` |
+| Staff | `staff@kvce.demo` |
+| Hostel Warden (boys / girls) | `warden@kvce.demo` / `warden.girls@kvce.demo` |
+| Student | `student@kvce.demo` |
+
+In demo mode **no SMS is sent and no money is collected**: SMS are logged as delivered, and the online checkout is a simulated Razorpay test flow. **Settings → Reset demo data** regenerates the dataset.
+
+## Who can do what
+
+| Module | Principal | Admin | Accounts | Admissions | Staff | Warden | Student |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Fees, cash book, expenditure, reports | manage | view | manage | fees view | — | — | own fees, pay online |
+| Enquiries & admissions | manage | manage | view | manage | add enquiries | — | — |
+| Students | manage | manage | view | manage | view | view | own profile |
+| Certificates | authorise | authorise | — | — | view | — | request / download own |
+| Hostel residents | manage | manage | view | — | view | manage (own hostel) | own room |
+| Leave & out-pass | manage | view | — | — | view | approve / check-out | request own |
+| SMS centre | manage | manage | manage | manage | — | view | — |
+| Users, settings, audit logs | view | manage | — | — | — | — | — |
+
+The matrix lives in `src/lib/roles.js`; write rules in `src/data/meta.js`.
 
 ## Production (Firebase)
 
-1. Copy `.env.example` to `.env` and fill in the `VITE_FIREBASE_*` values. The app switches to Firebase mode automatically.
-2. Enable **Email/Password** sign-in in Firebase Authentication.
-3. Deploy the rules and indexes: `firebase deploy --only firestore,storage`.
-4. Bootstrap the first administrator:
-   - Create the user in Firebase Authentication.
-   - In Firestore, create `users/{uid}` with `{ email, name, role: "it-admin", active: true, createdAt, updatedAt }`.
-5. Sign in as that administrator. Optionally seed an empty dev project from **Settings → Seed Firestore**. Then add other users in **User Management**: create each login in Firebase Auth first, then add the ERP profile using its UID.
-6. Build and host: `npm run build && firebase deploy --only hosting`.
+1. Copy `.env.example` to `.env` and fill in the `VITE_FIREBASE_*` values.
+2. Enable Email/Password sign-in in Firebase Authentication.
+3. `npm run rules` (regenerates `firestore.rules` from the role matrix), then `firebase deploy --only firestore,storage`.
+4. Create the first administrator in Firebase Auth and a `users/{uid}` document `{ email, name, role: "admin", active: true }`. Add other users in **Settings → Users & Access**. A student account must be linked to its student record.
+5. `npm run build && firebase deploy --only hosting`.
 
-## Security model
+### Production services (Cloud Functions, `functions/index.js`)
 
-- **Authentication.** Firebase Auth handles email/password sign-in (plus optional Google, Microsoft and Apple sign-in, once enabled in Firebase; the account must already have an ERP profile), password reset, and session persistence ("Remember me" uses local persistence; otherwise the session lasts for the tab). Sessions expire after `VITE_SESSION_TIMEOUT_MINUTES` of inactivity.
-- **Sign-out.** The user confirms, the action is audited, Firebase/demo session state and user-specific browser caches are cleared, and the user is redirected to Sign In. Private routes are guarded, so browser Back cannot reveal a private page.
-- **Authorization at three layers:**
-  1. Route guards and role-based menus (`src/lib/roles.js`).
-  2. A permission check inside the data service on every write (`src/data/meta.js`, `canWrite`). Student and parent reads are limited to linked students.
-  3. **Firestore security rules**, generated from the same matrix by `npm run rules`, so the client and server cannot drift. Roles are read from `users/{uid}` on the server, so users cannot change their own role. Audit logs are append-only.
-- **Audit logging.** Sign-ins, creates, updates, approvals, publications and payments are recorded (**Settings → Audit Logs**).
+| Function | Purpose | Needs |
+| --- | --- | --- |
+| `createPaymentOrder` | Creates a Razorpay order; the amount is computed on the server from the student's outstanding fees | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` secrets; `VITE_PAYMENTS_ENDPOINT`, `VITE_RAZORPAY_KEY_ID` in `.env` |
+| `razorpayWebhook` | Verifies the gateway signature, then writes receipts, updates balances and order status, and queues the receipt SMS | `RAZORPAY_WEBHOOK_SECRET`; webhook URL configured in the Razorpay dashboard |
+| `sendQueuedSms` | Sends every queued SMS and records Sent / Failed | `SMS_API_KEY` secret and `SMS_GATEWAY_URL` param; **adapt `sendSms()` to your provider's API and DLT templates** |
+| `onCertificateApproved` | Replaces the certificate signature with an HMAC made from a server-only secret | `CERT_SIGNING_SECRET` |
 
-> The Firestore rules have not yet been exercised against the Firebase emulator. Test them before going live, especially the student/parent scoped queries.
+Deploy with `cd functions && npm install && firebase deploy --only functions`. **These functions have not been deployed or tested against live Razorpay or SMS accounts**; test them in Razorpay test mode and with your SMS provider's sandbox before going live.
 
-## AI features
+## Security & privacy
 
-These five pages compute their indicators transparently from authorised ERP data:
+- Individual logins; sessions expire after `VITE_SESSION_TIMEOUT_MINUTES` of inactivity; sign-out clears cached data.
+- Authorisation at three layers: route guards and menus, a permission check on every write in the data layer, and Firestore rules generated from the same matrix.
+- Students can read only their own records. Salaries are visible only to Accounts, Admin and the Principal. Parent mobile numbers are masked for roles that do not contact parents.
+- Payments are marked successful only by the server after the gateway signature is verified. Student-created payment orders, SMS status changes and certificate signatures are server-only.
+- Certificate verification exposes one document by its id (`allow get`), never a list.
+- Append-only audit log of sign-ins, creates, updates, approvals, payments and certificate actions.
+- The service worker caches only static build assets, never pages or data.
 
-- Early-Warning System
-- AI HOD Dashboard
-- Accreditation & Audit Assistant
-- Question Assistant
-- Decision Support
-
-With no AI endpoint configured, narrative output comes from templates. It is labelled **"SIMULATED DEMO RESULT — no AI model connected"**.
-
-To enable Gemini, deploy `functions/index.js`. That function verifies the caller's ID token and role and keeps the API key server-side. Then set `VITE_AI_ENDPOINT`. AI-drafted questions always enter the Question Bank as *Pending Review* and need faculty approval.
-
-## Payments
-
-Finance records offline or verified payments and prints receipts. **No payment gateway is integrated**, and the app does not collect money.
+> The generated Firestore rules have not yet been run against the Firebase emulator. Test them before going live.
 
 ## Project layout
 
 ```
 src/
-  auth/           AuthProvider (Firebase + demo), session expiry, sign-out
-  config/         Firebase initialisation and mode detection
-  data/           types-driven store, demo (IndexedDB) and Firestore backends,
-                  permission metadata, analytics (attendance, grading, OBE, risk), seed
-  styles/app.css  The whole design system: brand blue (#1a8fe0) sidebar/top bar, cards, tables, forms, login page
-  components/     UI kit, DataTable (search/sort/filter/paginate/CSV/print), EntityPage (config-driven CRUD)
-  layout/         Sidebar, top bar (breadcrumbs, global search, AY selector, notifications, profile)
-  pages/          dashboard, academic/*, admin/*, services/*, ai/*, settings/*, reports, profile, student 360
-functions/        Secure Gemini integration point (Cloud Function)
-scripts/          firestore.rules generator
+  auth/          AuthProvider (Firebase + demo), session expiry, sign-out
+  data/          store, demo (IndexedDB) and Firestore backends, permission metadata, seed
+  lib/           roles, domain lists & fee maths, cash book, SMS, payments, certificates
+  components/    UI kit, DataTable (search/filter/CSV/print), EntityPage (config CRUD), fee components
+  pages/         Dashboard, finance/*, admissions/*, students/*, certificates/*, hostel/*, Sms, settings/*
+functions/       Payment, SMS and certificate-signing Cloud Functions
+scripts/         firestore.rules generator
+public/          manifest.webmanifest + sw.js (installable mobile app)
 ```
-
-Configurable rules live in **Settings**: current academic year, minimum attendance, assessment weights, grade bands, pass mark, CO target, attainment levels, and library loan/fine. Results, attendance eligibility and OBE attainment are recalculated everywhere from these values.

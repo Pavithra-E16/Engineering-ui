@@ -8,7 +8,7 @@ import { buildSeed } from './seed';
 const DB_NAME = 'kvce-erp-demo';
 const STORE = 'collections';
 const VERSION_KEY = '__seedVersion';
-export const SEED_VERSION = 3;
+export const SEED_VERSION = 4;
 function open() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, 1);
@@ -123,4 +123,9 @@ export async function resetDemo() {
   cache = null;
   loading = null;
   await tx('readwrite', (s) => s.clear());
+}
+/** Public certificate verification lookup (works signed-out, like the production endpoint). */
+export async function demoVerification(id) {
+  const db = await loadDemo();
+  return (db.certificateVerifications ?? []).find((v) => v.id === id) ?? null;
 }

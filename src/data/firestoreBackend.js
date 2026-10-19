@@ -1,7 +1,7 @@
 /**
  * PRODUCTION persistence via Cloud Firestore. Each permitted collection is
- * subscribed in real time; student/parent roles only subscribe to documents
- * that reference their linked students (firestore.rules enforces the same).
+ * subscribed in real time; students only subscribe to documents
+ * that reference their own record (firestore.rules enforces the same).
  */
 import {
   collection,
@@ -18,14 +18,14 @@ import {
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { COLLECTIONS } from '../types';
-import { META, canRead } from './meta';
+import { META, USER_READERS, canRead } from './meta';
 export async function fetchProfile(uid) {
   const snap = await getDoc(doc(firestore, 'users', uid));
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 export function subscribeAll(user, onData, onError) {
   const unsubs = [];
-  const personal = user.role === 'student' || user.role === 'parent';
+  const personal = user.role === 'student';
   const linked = user.linkedStudentIds ?? (user.studentId ? [user.studentId] : []);
   COLLECTIONS.forEach((col) => {
     if (!canRead(user, col)) {
@@ -34,7 +34,7 @@ export function subscribeAll(user, onData, onError) {
     }
     const meta = META[col];
     const ref = collection(firestore, col);
-    if (col === 'users' && user.role !== 'it-admin' && user.role !== 'principal') {
+    if (col === 'users' && !USER_READERS.includes(user.role)) {
       unsubs.push(onSnapshot(doc(firestore, 'users', user.id), (s) => onData(col, s.exists() ? [{ id: s.id, ...s.data() }] : []), onError));
       return;
     }
@@ -96,4 +96,9 @@ export async function seedFirestore(db, onProgress) {
     }
     onProgress?.(`${col}: ${rows.length}`);
   }
+}
+/** Public certificate lookup by verification id (rules allow a single-document get without sign-in). */
+export async function fetchVerification(id) {
+  const snap = await getDoc(doc(firestore, 'certificateVerifications', id));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }

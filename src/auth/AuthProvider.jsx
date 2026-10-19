@@ -56,7 +56,7 @@ function friendlyFirebaseError(code) {
     case 'auth/too-many-requests':
       return 'Too many failed attempts. Please wait a few minutes and try again.';
     case 'auth/user-disabled':
-      return 'This account has been disabled. Contact the IT Administrator.';
+      return 'This account has been disabled. Contact the Administrator.';
     case 'auth/network-request-failed':
       return 'Network error. Check your internet connection.';
     default:
@@ -167,7 +167,7 @@ export function AuthProvider({ children }) {
         const profile = await fetchProfile(cred.user.uid);
         if (!profile || !profile.active) {
           await fbSignOut(fbAuth);
-          throw new Error('Your account is not authorised for the ERP. Contact the IT Administrator.');
+          throw new Error('Your account is not authorised for the ERP. Contact the Administrator.');
         }
         if (expectedRole && profile.role !== expectedRole) {
           await fbSignOut(fbAuth);
@@ -196,7 +196,7 @@ export function AuthProvider({ children }) {
       localStorage.setItem(LOCK_KEY + em, JSON.stringify({ n: n >= 5 ? 0 : n, until: n >= 5 ? Date.now() + 5 * 60_000 : 0 }));
       throw new Error('Invalid email or password.');
     }
-    if (!u.active) throw new Error('This account has been deactivated. Contact the IT Administrator.');
+    if (!u.active) throw new Error('This account has been deactivated. Contact the Administrator.');
     if (expectedRole && u.role !== expectedRole)
       throw new Error(`This account is not registered as ${roleLabel(expectedRole)}. Choose the correct role or “Any role”.`);
     localStorage.removeItem(LOCK_KEY + em);
@@ -219,7 +219,7 @@ export function AuthProvider({ children }) {
       const profile = await fetchProfile(cred.user.uid);
       if (!profile || !profile.active) {
         await fbSignOut(fbAuth);
-        throw new Error('This account is not registered in the ERP. Contact the IT Administrator.');
+        throw new Error('This account is not registered in the ERP. Contact the Administrator.');
       }
       lastActive.current = Date.now();
       setUser(profile);

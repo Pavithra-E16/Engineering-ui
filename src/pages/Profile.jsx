@@ -124,7 +124,7 @@ export default function Profile() {
               My access
             </span>
           }
-          subtitle="Granted by your role; changeable only by an IT Administrator"
+          subtitle="Granted by your role; changeable only by an Administrator"
           bodyClass="scroll"
         >
           <ul className="stack tight">

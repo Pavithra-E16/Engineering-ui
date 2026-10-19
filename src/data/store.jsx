@@ -6,15 +6,15 @@ import { nowISO, uid } from '../lib/utils';
 import { COLLECTIONS } from '../types';
 import { loadDemo, persist, resetDemo as resetDemoStore } from './demoBackend';
 import { fsCreate, fsDelete, fsUpdate, subscribeAll } from './firestoreBackend';
-import { META, canRead, canWrite } from './meta';
+import { META, USER_READERS, canRead, canWrite } from './meta';
 const Ctx = createContext(null);
 export const useData = () => useContext(Ctx);
 const empty = () => Object.fromEntries(COLLECTIONS.map((c) => [c, []]));
-const PREFIX = { auditLogs: 'log_', notifications: 'ntf_' };
-const NO_AUDIT = new Set(['auditLogs', 'notifications']);
+const PREFIX = { auditLogs: 'log_', notifications: 'ntf_', certificateDownloads: 'dl_' };
+const NO_AUDIT = new Set(['auditLogs', 'notifications', 'smsLogs', 'certificateDownloads']);
 /** Emulates server-side scoped reads in demo mode (Firestore queries + rules do this in production). */
 function scope(full, user) {
-  const personal = user.role === 'student' || user.role === 'parent';
+  const personal = user.role === 'student';
   const linked = new Set(user.linkedStudentIds ?? (user.studentId ? [user.studentId] : []));
   const out = {};
   COLLECTIONS.forEach((c) => {
@@ -23,7 +23,7 @@ function scope(full, user) {
       out[c] = [];
       return;
     }
-    if (c === 'users' && user.role !== 'it-admin' && user.role !== 'principal') {
+    if (c === 'users' && !USER_READERS.includes(user.role)) {
       out[c] = rows.filter((u) => u.id === user.id);
       return;
     }
@@ -118,7 +118,10 @@ export function DataProvider({ children }) {
   );
   const create = async (col, data, opts = {}) => {
     if (!user) throw new Error('Not signed in');
-    if (!canWrite(user, col, data, true)) throw new Error(`You do not have permission to create ${META[col].label.toLowerCase()} records.`);
+    // opts.server emulates a trusted server action (e.g. the payment-gateway webhook); honoured only in demo mode.
+    const server = opts.server && APP_MODE === 'demo';
+    if (!server && !canWrite(user, col, data, true))
+      throw new Error(`You do not have permission to create ${META[col].label.toLowerCase()} records.`);
     const t = nowISO();
     const rec = {
       active: true,
@@ -135,7 +138,7 @@ export function DataProvider({ children }) {
         opts.audit || 'Created',
         META[col].label,
         rec.id,
-        opts.details ?? rec.name ?? rec.title ?? rec.code ?? rec.invoiceNo ?? rec.receiptNo,
+        opts.details ?? rec.name ?? rec.title ?? rec.code ?? rec.invoiceNo ?? rec.receiptNo ?? rec.voucherNo ?? rec.requestNo,
       );
     return rec;
   };
@@ -145,7 +148,8 @@ export function DataProvider({ children }) {
     if (!existing) throw new Error('Record not found or not accessible.');
     const selfLogin =
       col === 'users' && id === user.id && Object.keys(patch).every((k) => ['lastLogin', 'passwordHash', 'salt', 'phone'].includes(k));
-    if (!selfLogin && !canWrite(user, col, { ...existing, ...patch }))
+    const server = opts.server && APP_MODE === 'demo';
+    if (!selfLogin && !server && !canWrite(user, col, { ...existing, ...patch }))
       throw new Error(`You do not have permission to modify ${META[col].label.toLowerCase()} records.`);
     const p = { ...patch, updatedAt: nowISO(), updatedBy: user.id };
     if (APP_MODE === 'demo')

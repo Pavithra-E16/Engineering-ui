@@ -94,7 +94,7 @@ code { background: var(--slate-bg); padding: 1px 5px; border-radius: 4px; font-s
   .span-3 { grid-column: span 3; }
 }
 .stats { margin-bottom: 16px; }
-@media (max-width: 639px) { .stats.grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
+@media (max-width: 639px) { .stats.grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .stat-label { white-space: normal; } }
 
 /* =====================================================================
    App shell
@@ -708,3 +708,113 @@ html[data-theme='dark'] img, html[data-theme='dark'] .chart { color-scheme: dark
 
 /* theme toggle button */
 .theme-btn svg { width: 19px; height: 19px; }
+
+/* ---------- College ERP modules ---------- */
+.section-title { font-size: 15px; font-weight: 600; color: var(--heading); margin: 8px 0 12px; }
+.table-scroll { overflow-x: auto; }
+@media (min-width: 900px) { .form-grid.cols-3 { grid-template-columns: repeat(3, 1fr); } .form-grid.cols-3 .full { grid-column: span 3; } }
+.plain-link, .plain-link:hover { color: inherit; text-decoration: none; display: block; min-width: 0; }
+.plain-link .stat { cursor: pointer; }
+/* Quick actions: large touch targets for staff on phones (installable PWA). */
+.quick-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 640px) { .quick-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .quick-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.quick-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 16px; min-height: 92px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); color: var(--ink); text-decoration: none; }
+.quick-tile:hover { border-color: var(--primary); text-decoration: none; background: var(--hover); }
+.quick-tile svg { width: 22px; height: 22px; color: var(--primary); }
+.timeline { list-style: none; margin: 0; padding: 0 0 0 18px; border-left: 2px solid var(--line); display: flex; flex-direction: column; gap: 14px; }
+.timeline li { position: relative; }
+.timeline li::before { content: ''; position: absolute; left: -25px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 3px var(--card); }
+.timeline p { margin: 0; }
+.verify-page { min-height: 100vh; background: var(--bg); display: flex; justify-content: center; padding: 40px 16px; box-sizing: border-box; }
+.verify-inner { width: 100%; max-width: 760px; }
+.verify-page .brand-icon { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: var(--primary); color: #fff; flex: none; }
+.verify-page .brand-icon svg { width: 24px; height: 24px; }
+
+/* =====================================================================
+   Page design (reference layout): light page background, white title card,
+   plain stat cards, quiet tables and form fields. Sidebar & top bar unchanged.
+   ===================================================================== */
+:root { --page-bg: #f1f3f7; --navy: #1f3a5f; --navy-600: #172e4d; --field-border: #d5dae2; --field-label: #5b6475; }
+html[data-theme='dark'] { --page-bg: var(--bg); --navy: #2f5b8f; --navy-600: #274d7a; --field-border: var(--line); --field-label: var(--muted); }
+body, .main, .content { background: var(--page-bg); }
+
+/* Page title card */
+.page-banner { background: var(--surface); color: var(--heading); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 18px 22px; margin-bottom: 16px; }
+html[data-theme='dark'] .page-banner { background: var(--surface); box-shadow: none; }
+.page-banner .banner-icon { display: none; }
+.page-banner h1 { font-size: 21px; font-weight: 700; color: var(--heading); }
+.page-banner p { font-size: 12.5px; color: var(--muted); opacity: 1; }
+.banner-actions .btn-secondary { background: var(--surface); color: var(--ink); border-color: var(--field-border); }
+.banner-actions .btn-secondary:hover { background: var(--surface-2); }
+.banner-actions .btn-primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+.banner-actions .btn-primary:hover { background: var(--navy-600); }
+
+/* Stat cards */
+.stat { border-radius: 10px; padding: 16px 18px; box-shadow: none; }
+.stat-label { text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 400; color: var(--muted); }
+.stat-value { font-size: 22px; font-weight: 500; margin-top: 8px; }
+.stat-icon { padding: 6px; border-radius: 8px; opacity: .85; }
+.stat-icon svg { width: 17px; height: 17px; }
+
+/* Cards & tables */
+.card, .table-card { border-radius: 10px; }
+.card-head { padding: 14px 18px; }
+.card-title { font-size: 14.5px; font-weight: 600; color: var(--heading); }
+.table th, .simple-table th { background: var(--surface-2); color: #5b6475; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; border-bottom: 1px solid var(--line); border-right: 1px solid var(--line-2); }
+html[data-theme='dark'] .table th, html[data-theme='dark'] .simple-table th { color: var(--muted); }
+.table td { border-bottom: 1px solid var(--line-2); }
+.badge { border-radius: 4px; font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; padding: 3px 8px; }
+
+/* Buttons: navy primary, white bordered secondary */
+.btn { border-radius: 6px; }
+.btn-primary { background: var(--navy); }
+.btn-primary:hover:not(:disabled) { background: var(--navy-600); }
+.btn-secondary { background: var(--surface); border-color: var(--field-border); color: var(--ink); }
+
+/* Form fields (reference dialog) */
+.field-label { font-size: 12px; font-weight: 500; color: var(--field-label); margin-bottom: 6px; }
+.input { border: 1px solid var(--field-border); border-radius: 6px; padding: 9px 12px; font-size: 13px; background: var(--surface); }
+.input::placeholder, textarea.input::placeholder { color: #a3aab6; }
+textarea.input { min-height: 72px; resize: vertical; }
+.input:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(31, 58, 95, .12); }
+.form-grid { gap: 16px 18px; }
+
+/* Dialogs */
+.modal { border-radius: 14px; }
+.modal-head { padding: 18px 22px; }
+.modal-head h2 { font-size: 16px; font-weight: 700; color: var(--heading); }
+.modal-body { padding: 20px 22px; }
+.modal-foot { padding: 14px 22px; gap: 10px; }
+.modal-foot .btn { padding: 8px 16px; }
+
+/* College logo (sidebar, sign-in, verify page) */
+.brand-logo { width: 42px; height: 42px; border-radius: 10px; background: #fff; padding: 3px; object-fit: contain; flex-shrink: 0; display: block; }
+.auth-logo .brand-logo { width: 46px; height: 46px; }
+.auth-form-logo { display: block; width: 84px; height: 84px; object-fit: contain; margin: 0 auto 10px; }
+.input { padding: 7px 11px; font-size: 12.5px; }
+select.input { padding-right: 28px; }
+.field-label { font-size: 11.5px; margin-bottom: 5px; }
+.modal .form-grid { gap: 14px 18px; }
+.close-btn:focus:not(:focus-visible) { outline: none; }
+/* Larger college logo */
+.brand-logo { width: 56px; height: 56px; border-radius: 12px; padding: 3px; }
+.sidebar.collapsed .brand-logo { width: 48px; height: 48px; }
+.auth-logo .brand-logo { width: 72px; height: 72px; border-radius: 14px; padding: 4px; }
+.auth-logo { font-size: 18px; gap: 14px; }
+.auth-form-logo { width: 130px; height: 130px; margin-bottom: 6px; }
+.sidebar-brand { height: auto; min-height: 76px; padding: 10px 16px; gap: 12px; }
+/* Compact sign-in card */
+.auth-page { padding: 24px 16px; }
+.auth-brand { min-height: 0; padding: 28px 36px 0; }
+.auth-brand h1 { font-size: 32px; margin-top: 14px; }
+.auth-cap { width: 220px; margin-top: 12px; }
+.auth-building { padding-top: 10px; }
+.auth-building svg { height: 52px; }
+.auth-building.light svg { height: 46px; }
+.auth-form-side { padding: 26px 72px 66px; }
+.auth-form-logo { width: 96px; height: 96px; margin-bottom: 2px; }
+.auth-title h2 { font-size: 32px; }
+.auth-form { margin-top: 12px; gap: 9px; }
+.auth-input { height: 38px; }
+.auth-btn { height: 40px; }

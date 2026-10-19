@@ -153,7 +153,7 @@ export default function LoginPage() {
 
         {mode === 'demo' && (
           <p className="auth-demo">
-            Demo: <b>it-admin@{DEMO_DOMAIN}</b> / <b>{DEMO_PASSWORD}</b> · or choose a role above to auto-fill
+            Demo: <b>principal@{DEMO_DOMAIN}</b> / <b>{DEMO_PASSWORD}</b> · or choose a role above to auto-fill
           </p>
         )}
       </form>

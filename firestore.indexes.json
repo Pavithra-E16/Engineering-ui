@@ -1,13 +1,4 @@
 {
-  "indexes": [
-    { "collectionGroup": "attendance", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "academicYearId", "order": "ASCENDING" }, { "fieldPath": "courseId", "order": "ASCENDING" }, { "fieldPath": "sectionId", "order": "ASCENDING" }, { "fieldPath": "date", "order": "DESCENDING" }] },
-    { "collectionGroup": "assessments", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "academicYearId", "order": "ASCENDING" }, { "fieldPath": "courseId", "order": "ASCENDING" }, { "fieldPath": "sectionId", "order": "ASCENDING" }] },
-    { "collectionGroup": "invoices", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "studentId", "order": "ASCENDING" }, { "fieldPath": "academicYearId", "order": "ASCENDING" }] },
-    { "collectionGroup": "payments", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "studentId", "order": "ASCENDING" }, { "fieldPath": "date", "order": "DESCENDING" }] },
-    { "collectionGroup": "auditLogs", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "userId", "order": "ASCENDING" }, { "fieldPath": "createdAt", "order": "DESCENDING" }] },
-    { "collectionGroup": "students", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "departmentId", "order": "ASCENDING" }, { "fieldPath": "semesterNo", "order": "ASCENDING" }, { "fieldPath": "rollNo", "order": "ASCENDING" }] },
-    { "collectionGroup": "lessonPlans", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "facultyId", "order": "ASCENDING" }, { "fieldPath": "plannedDate", "order": "ASCENDING" }] },
-    { "collectionGroup": "tickets", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "studentId", "order": "ASCENDING" }, { "fieldPath": "status", "order": "ASCENDING" }] }
-  ],
+  "indexes": [],
   "fieldOverrides": []
 }

@@ -227,10 +227,11 @@ export function EntityPage({ config }) {
     const err = !!errors[f.key];
     const set = (val) => setForm((s) => ({ ...s, [f.key]: val }));
     const dis = f.readOnly;
+    const ph = f.placeholder ?? (['date', 'checkbox'].includes(f.type) ? undefined : `Enter ${f.label.toLowerCase()}`);
     switch (f.type) {
       case 'textarea':
         return (
-          <Textarea value={Array.isArray(v) ? v.join('\n') : (v ?? '')} onChange={(e) => set(e.target.value)} error={err} disabled={dis} />
+          <Textarea value={Array.isArray(v) ? v.join('\n') : (v ?? '')} onChange={(e) => set(e.target.value)} error={err} disabled={dis} placeholder={ph} />
         );
       case 'select':
         return (
@@ -307,6 +308,7 @@ export function EntityPage({ config }) {
             max={f.max}
             disabled={dis}
             step={f.type === 'number' || f.type === 'money' ? 'any' : undefined}
+            placeholder={ph}
           />
         );
     }

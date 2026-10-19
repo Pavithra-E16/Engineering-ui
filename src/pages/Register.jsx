@@ -21,7 +21,7 @@ const DEPARTMENTS = [
 
 /**
  * Account request form. Nobody can create their own account or pick their own access:
- * the request goes to the IT Administrator, who creates the account in User Management.
+ * the request goes to the Administrator, who creates the account in User Management.
  */
 export default function RegisterPage() {
   const { mode } = useAuth();
@@ -84,8 +84,8 @@ export default function RegisterPage() {
       {done ? (
         <div className="auth-form">
           <Alert tone="success" title="Request submitted">
-            The IT Administrator will verify your details and email you your login.{' '}
-            {mode === 'demo' && 'In demo mode, sign in as it-admin to see it under User Management → Account requests.'}
+            The Administrator will verify your details and email you your login.{' '}
+            {mode === 'demo' && 'In demo mode, sign in as admin to see it under Users & Access → Account requests.'}
           </Alert>
           <Link to="/login" className="auth-btn" style={{ textDecoration: 'none' }}>
             BACK TO SIGN IN
